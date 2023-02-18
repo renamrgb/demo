@@ -9,8 +9,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-       registry.addInterceptor(new OrganizationInterceptor())
-               .addPathPatterns("/api/**")
-               .excludePathPatterns("/api/h2-console/**");
+        registry.addInterceptor(new OrganizationInterceptor())
+                .addPathPatterns("/api/**")
+                .excludePathPatterns("/api/h2-console/**");
     }
+
 }

@@ -17,23 +17,24 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public abstract class OrganizationRepositoryImpl<T extends OrganizationEntity, ID extends Serializable> extends SimpleJpaRepository<T, ID> implements OrganizationRepository<T, ID> {
+@Transactional(readOnly = true)
+public class OrganizationRepositoryImpl<T extends OrganizationEntity, ID extends Serializable> extends SimpleJpaRepository<T, ID> implements OrganizationRepository<T, ID> {
 
-    private final String ORGANIZATION_ID = OrganizationScope.get();
     private final EntityManager em;
+    private JpaEntityInformation<T, ?> entityInformation;
 
     public OrganizationRepositoryImpl(JpaEntityInformation<T, ?> entityInformation, EntityManager entityManager) {
         super(entityInformation, entityManager);
         this.em = entityManager;
+        this.entityInformation = entityInformation;
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Optional<T> findById(ID id) {
         CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
         CriteriaQuery<T> query = criteriaBuilder.createQuery(getDomainClass());
         Root<T> root = query.from(getDomainClass());
-        Predicate organizationPredicate = criteriaBuilder.equal(root.get("organizationId"), ORGANIZATION_ID);
+        Predicate organizationPredicate = criteriaBuilder.equal(root.get("organizationId"), OrganizationScope.get());
         Predicate idPredicate = criteriaBuilder.equal(root.get("id"), id);
         query.select(root).where(organizationPredicate, idPredicate);
         return em.createQuery(query).getResultList().stream().findFirst();
@@ -41,21 +42,29 @@ public abstract class OrganizationRepositoryImpl<T extends OrganizationEntity, I
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<T> findAll() {
         CriteriaBuilder builder = em.getCriteriaBuilder();
         CriteriaQuery<T> query = builder.createQuery(getDomainClass());
         Root<T> root = query.from(getDomainClass());
-        query.where(builder.equal(root.get("ORGANIZATION_ID"), ORGANIZATION_ID));
+        query.where(builder.equal(root.get("ORGANIZATION_ID"), OrganizationScope.get()));
         return em.createQuery(query).getResultList();
+    }
+
+    public OrganizationRepositoryImpl(Class<T> domainClass, EntityManager em, EntityManager em1) {
+        super(domainClass, em);
+        this.em = em1;
     }
 
     @Override
     @Transactional
     public <S extends T> S save(S entity) {
-        entity.setOrganizationId(ORGANIZATION_ID);
-        em.persist(entity);
-        return entity;
+        entity.setOrganizationId(OrganizationScope.get());
+//        if (entityInformation.isNew(entity)) {
+            em.persist(entity);
+            return entity;
+//        } else {
+//            return em.merge(entity);
+//        }
     }
 
     @Override
@@ -64,7 +73,7 @@ public abstract class OrganizationRepositoryImpl<T extends OrganizationEntity, I
         CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
         CriteriaDelete<T> delete = criteriaBuilder.createCriteriaDelete(getDomainClass());
         Root<T> root = delete.from(getDomainClass());
-        Predicate organizationPredicate = criteriaBuilder.equal(root.get("organizationId"), ORGANIZATION_ID);
+        Predicate organizationPredicate = criteriaBuilder.equal(root.get("organizationId"), OrganizationScope.get());
         Predicate idPredicate = criteriaBuilder.equal(root.get("id"), id);
         delete.where(organizationPredicate, idPredicate);
         em.createQuery(delete).executeUpdate();

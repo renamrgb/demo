@@ -10,11 +10,12 @@ import java.util.Optional;
 @NoRepositoryBean
 public interface OrganizationRepository<T extends OrganizationEntity, ID extends Serializable> extends JpaRepository<T, ID> {
 
+    @Override
     Optional<T> findById(ID id);
-
+    @Override
     List<T> findAll();
-
+    @Override
     <S extends T> S save(S entity);
-
+    @Override
     void deleteById(ID id);
 }
